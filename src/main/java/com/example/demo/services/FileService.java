@@ -2,10 +2,12 @@ package com.example.demo.services;
 
 import com.example.demo.models.FileEntity;
 import com.example.demo.models.Folders;
+import com.example.demo.models.User;
 import com.example.demo.repositories.FileRepository;
 import com.example.demo.repositories.FolderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 
 import java.io.IOException;
 import java.util.Optional;
@@ -21,16 +23,23 @@ public class FileService {
         this.folderRepository = folderRepository;
     }
 
-    public FileEntity uploadFile(Long folderId, MultipartFile file) throws IOException {
-        Optional<Folders> folderOptional = folderRepository.findById(folderId);
+    public void uploadFile(Long folderId, MultipartFile file, User user) throws IOException {
+        Folders folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new IllegalArgumentException("Folder not found with id" + folderId));
 
-        if (folderOptional.isEmpty()) {
-            throw new IllegalArgumentException("Folder not found");
+        if (!folder.getUser().equals(user)) {
+            throw new IllegalArgumentException("You do not have permission to upload files to this folder");
         }
 
-        Folders folders = folderOptional.get();
-        FileEntity fileEntity = new FileEntity(file.getOriginalFilename(), file.getContentType(), file.getBytes(), folders);
-        return fileRepository.save(fileEntity);
+        FileEntity fileEntity = new FileEntity(
+                file.getOriginalFilename(),
+                file.getContentType(),
+                file.getBytes(),
+                folder
+        );
+
+        fileRepository.save(fileEntity);
+
     }
 
     public void deleteFile(Long fileId) {
@@ -45,3 +54,4 @@ public class FileService {
         return fileRepository.findById(fileId);
     }
 }
+
