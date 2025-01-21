@@ -21,6 +21,7 @@ configurations {
 
 repositories {
 	mavenCentral()
+
 }
 
 dependencies {
@@ -31,6 +32,13 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	implementation ("org.springframework.boot:spring-boot-starter-security")
+	implementation ("org.springframework.boot:spring-boot-starter-validation")
+	implementation ("org.springframework.boot:spring-boot-starter-logging")
+	implementation ("org.springframework.boot:spring-boot-starter-thymeleaf")
+	implementation ("org.springframework.boot:spring-boot-starter-json")
+	implementation("com.auth0:java-jwt:4.4.0")
+
 }
 
 tasks.withType<Test> {
