@@ -27,7 +27,10 @@ public class FileService {
         Folders folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new IllegalArgumentException("Folder not found with id" + folderId));
 
-        if (!folder.getUser().equals(user)) {
+        System.out.println("Folder owner: " + folder.getUser().getName());
+        System.out.println("User: " + user.getName());
+
+        if (!folder.getUser().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You do not have permission to upload files to this folder");
         }
 

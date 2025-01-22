@@ -1,5 +1,6 @@
 package com.example.demo.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import org.hibernate.mapping.Join;
@@ -18,6 +19,7 @@ public class Folders {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     public Folders(String folderName, User user) {
