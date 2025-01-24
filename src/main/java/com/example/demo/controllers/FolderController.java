@@ -4,6 +4,8 @@ import com.example.demo.models.Folders;
 import com.example.demo.models.User;
 import com.example.demo.repositories.FolderRepository;
 import com.example.demo.repositories.UserRepository;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -47,16 +49,11 @@ public class FolderController {
 
     }
 
+    @Setter
+    @Getter
     public static class FolderDTO {
-        private String foldername;
+        private String folderName;
 
-        public String getFolderName() {
-            return foldername;
-        }
-
-        public void setFolderName(String foldername) {
-            this.foldername = foldername;
-        }
     }
 
 }

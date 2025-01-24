@@ -40,14 +40,25 @@ public class AuthFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         System.out.println("Auth header received: " + authHeader);
 
+        if (request.getRequestURI().equals("/register") || request.getRequestURI().equals("/login")) {
+            filterChain.doFilter(request,response);
+            return;
+        }
+
+        authHeader = request.getHeader("Authorization");
+        System.out.println("Auth header received: " + authHeader);
+
         if (authHeader == null || authHeader.isBlank() || !authHeader.startsWith("Bearer ")) {
             System.out.println("Invalid auth header format");
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Authorization header is missing or malformed");
+            response.getWriter().flush();
             return;
         }
 
         String token = authHeader.substring(7);
         System.out.println("Token extracted: " + token);
+
         try {
         Algorithm algorithm = Algorithm.HMAC256("secretsecretsecret");
         JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();

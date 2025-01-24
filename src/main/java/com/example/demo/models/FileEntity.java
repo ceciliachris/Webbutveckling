@@ -1,7 +1,10 @@
 package com.example.demo.models;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
 @Entity
 public class FileEntity {
 
@@ -12,6 +15,7 @@ public class FileEntity {
     @Column(columnDefinition = "bytea")
     private byte[] data;
 
+    @Setter
     private String fileName;
     private String fileType;
 
@@ -25,44 +29,22 @@ public class FileEntity {
 
     public FileEntity(String fileName, String fileType, byte[] data, Folders folder) {
         this.fileName = fileName;
-        this.fileType = fileType;
+        this.fileType = (fileType != null && fileType.contains("/")) ? fileType : determineContentType(fileName);
         this.data = data;
         this.folder = folder;
     }
 
-    public Long getId() {
-        return id;
-    }
+    private String determineContentType(String fileName) {
+        if (fileName == null) return "application/octet-stream";
 
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getFileType() {
-        return fileType;
-    }
-
-    public void setFileType(String fileType) {
-        this.fileType = fileType;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
-    }
-
-    public Folders getFolder() {
-        return folder;
-    }
-
-    public void setFolder(Folders folder) {
-        this.folder = folder;
+        String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+        switch (extension) {
+            case "pdf": return "application/pdf";
+            case "jpg": return "application/jpeg";
+            case "png": return "application/png";
+            case "jpeg": return "application/jpeg";
+            case "txt": return "application/txt";
+            default: return "application/octet-stream";
+        }
     }
 }

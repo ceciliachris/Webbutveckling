@@ -34,6 +34,14 @@ public class FileService {
             throw new IllegalArgumentException("You do not have permission to upload files to this folder");
         }
 
+        System.out.println("Detected MIME type: " + file.getContentType());
+
+        // Skapa FileEntity med fallback MIME-type
+        String mimeType = file.getContentType();
+        if (mimeType == null || !mimeType.contains("/")) {
+            mimeType = "application/octet-stream";
+        }
+
         FileEntity fileEntity = new FileEntity(
                 file.getOriginalFilename(),
                 file.getContentType(),
@@ -42,19 +50,29 @@ public class FileService {
         );
 
         fileRepository.save(fileEntity);
+        System.out.println("File uploaded successfully: " + fileEntity.getFileName());
 
     }
 
-    public void deleteFile(Long fileId) {
-        if (fileRepository.existsById(fileId)) {
-            fileRepository.deleteById(fileId);
-        } else {
-            throw new IllegalArgumentException("File not found with id " + fileId);
+    public void deleteFile(Long fileId, User user) {
+        FileEntity fileEntity = fileRepository.findById(fileId)
+                .orElseThrow(() -> new IllegalArgumentException("File not found with id " + fileId));
+        if (!fileEntity.getFolder().getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You do not have permission to delete this file");
         }
+
+        fileRepository.delete(fileEntity);
     }
 
-    public Optional<FileEntity> downloadFile(Long fileId) {
-        return fileRepository.findById(fileId);
+    public Optional<FileEntity> downloadFile(Long fileId, User user) {
+        FileEntity fileEntity = fileRepository.findById(fileId)
+                .orElseThrow(() -> new IllegalArgumentException("File not found with id " + fileId));
+        System.out.println("User ID: " + user.getId());
+        System.out.println("File owner ID: " + fileEntity.getFolder().getUser().getId());
+
+        if (!fileEntity.getFolder().getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You do not have permission to download this file");
+        }
+        return Optional.of(fileEntity);
     }
 }
-

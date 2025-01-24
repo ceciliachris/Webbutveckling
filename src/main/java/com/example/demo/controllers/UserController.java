@@ -72,7 +72,7 @@ public class UserController {
                     .withIssuer("auth0")
                     .withSubject(user.getId().toString())
                     .withClaim("loginDate", new Date())
-                    .withExpiresAt(Instant.now().plus(15, ChronoUnit.MINUTES))
+                    .withExpiresAt(Instant.now().plus(1, ChronoUnit.DAYS))
                     .sign(algorithm);
         }
 
