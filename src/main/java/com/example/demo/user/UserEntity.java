@@ -1,5 +1,6 @@
-package com.example.demo.models;
+package com.example.demo.user;
 
+import com.example.demo.folder.FolderEntity;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -12,7 +13,7 @@ import java.util.UUID;
 @Entity(name = "users")
 @Data
 @NoArgsConstructor
-public class User {
+public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -28,9 +29,9 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
-    private List<Folders> folders = new ArrayList<>();
+    private List<FolderEntity> folders = new ArrayList<>();
 
-    public User(String name, String password) {
+    public UserEntity(String name, String password) {
         this.name = name;
         this.password = password;
     }

@@ -1,6 +1,6 @@
 package com.example.demo.security;
 
-import com.example.demo.repositories.UserRepository;
+import com.example.demo.user.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -39,7 +39,7 @@ public class SecurityConfig {
                             .requestMatchers("/api/folders/**").authenticated()
                             .anyRequest().authenticated()
                 )
-                .addFilterBefore(new AuthFilter(userRepository), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint((request, response, authException) -> {
                             System.out.println("Authentication failed: " + authException.getMessage());

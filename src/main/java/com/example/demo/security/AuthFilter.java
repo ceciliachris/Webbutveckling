@@ -1,34 +1,22 @@
 package com.example.demo.security;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.example.demo.models.User;
-import com.example.demo.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.UUID;
 
+/**
+ * Filterklass för att hantera autentisering vid varje HTTP-anrop.
+ */
 @Service
+@RequiredArgsConstructor
 public class AuthFilter extends OncePerRequestFilter {
 
-    private final UserRepository userRepository;
-
-    @Autowired
-    public AuthFilter(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final AuthService authService;
 
     @Override
     protected void doFilterInternal(
@@ -37,17 +25,13 @@ public class AuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         System.out.println("Request URL: " + request.getRequestURI());
-        String authHeader = request.getHeader("Authorization");
-        System.out.println("Auth header received: " + authHeader);
 
         if (request.getRequestURI().equals("/register") || request.getRequestURI().equals("/login")) {
             filterChain.doFilter(request,response);
             return;
         }
 
-        authHeader = request.getHeader("Authorization");
-        System.out.println("Auth header received: " + authHeader);
-
+       String authHeader = request.getHeader("Authorization");
         if (authHeader == null || authHeader.isBlank() || !authHeader.startsWith("Bearer ")) {
             System.out.println("Invalid auth header format");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -57,24 +41,8 @@ public class AuthFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        System.out.println("Token extracted: " + token);
-
         try {
-        Algorithm algorithm = Algorithm.HMAC256("secretsecretsecret");
-        JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
-
-        DecodedJWT jwt = verifier.verify(token);
-            System.out.println("JWT verified successfully");
-        UUID userId = UUID.fromString(jwt.getSubject());
-            System.out.println("User ID from token: " + userId);
-
-        User user = userRepository.findById(userId).orElseThrow();
-            System.out.println("User found: " + user.getName());
-
-            SecurityContextHolder.getContext().setAuthentication(
-                    new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>())
-            );
-
+            authService.authenticateUser(token);
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             System.out.println("Error in filter: " + e.getMessage());

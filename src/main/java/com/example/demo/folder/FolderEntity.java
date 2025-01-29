@@ -1,14 +1,14 @@
-package com.example.demo.models;
+package com.example.demo.folder;
 
+import com.example.demo.user.UserEntity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-import org.hibernate.mapping.Join;
 
 @Entity
 @Table(name = "folders")
 @NoArgsConstructor
-public class Folders {
+public class FolderEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,9 +20,9 @@ public class Folders {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonBackReference
-    private User user;
+    private UserEntity user;
 
-    public Folders(String folderName, User user) {
+    public FolderEntity(String folderName, UserEntity user) {
         this.folderName = folderName;
         this.user = user;
     }
@@ -43,10 +43,10 @@ public class Folders {
         this.folderName = folderName;
     }
 
-    public User getUser() {
+    public UserEntity getUser() {
         return user;
     }
-    public void setUser(User user) {
+    public void setUser(UserEntity user) {
         this.user = user;
     }
 
@@ -64,7 +64,7 @@ public class Folders {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Folders folders = (Folders) o;
+        FolderEntity folders = (FolderEntity) o;
 
         return id != null ? id.equals(folders.id) : folders.id == null;
     }

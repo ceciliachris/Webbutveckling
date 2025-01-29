@@ -1,5 +1,6 @@
-package com.example.demo.models;
+package com.example.demo.file;
 
+import com.example.demo.folder.FolderEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,13 +22,13 @@ public class FileEntity {
 
     @ManyToOne
     @JoinColumn(name = "folder_id")
-    private Folders folder;
+    private FolderEntity folder;
 
     public FileEntity() {
     }
 
 
-    public FileEntity(String fileName, String fileType, byte[] data, Folders folder) {
+    public FileEntity(String fileName, String fileType, byte[] data, FolderEntity folder) {
         this.fileName = fileName;
         this.fileType = (fileType != null && fileType.contains("/")) ? fileType : determineContentType(fileName);
         this.data = data;

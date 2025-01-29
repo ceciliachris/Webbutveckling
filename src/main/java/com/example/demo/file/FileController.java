@@ -1,9 +1,6 @@
-package com.example.demo.controllers;
+package com.example.demo.file;
 
-import com.example.demo.models.FileEntity;
-import com.example.demo.models.User;
-import com.example.demo.services.FileService;
-import lombok.RequiredArgsConstructor;
+import com.example.demo.user.UserEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
-import java.io.File;
 import java.io.IOException;
 
 @RestController
@@ -28,7 +24,7 @@ public class FileController {
     }
 
     @PostMapping("/upload/{folderId}")
-    public ResponseEntity<String> uploadFile(@PathVariable Long folderId, @RequestParam("file") MultipartFile file, @AuthenticationPrincipal User user) {
+    public ResponseEntity<String> uploadFile(@PathVariable Long folderId, @RequestParam("file") MultipartFile file, @AuthenticationPrincipal UserEntity user) {
 
         try {
             System.out.println("Folder ID: " + folderId);
@@ -46,7 +42,7 @@ public class FileController {
     }
 
     @DeleteMapping("/{fileId}")
-    public ResponseEntity<String> deleteFile(@PathVariable Long fileId, @AuthenticationPrincipal User user) {
+    public ResponseEntity<String> deleteFile(@PathVariable Long fileId, @AuthenticationPrincipal UserEntity user) {
         try {
             fileService.deleteFile(fileId, user);
             return ResponseEntity.ok("File deleted successfully");
@@ -57,7 +53,7 @@ public class FileController {
     }
 
     @GetMapping("/{fileId}")
-    public ResponseEntity<byte[]> downloadFile(@PathVariable Long fileId, @AuthenticationPrincipal User user) {
+    public ResponseEntity<byte[]> downloadFile(@PathVariable Long fileId, @AuthenticationPrincipal UserEntity user) {
         try {
             System.out.println("Requesting download for file ID: " + fileId);
             FileEntity fileEntity = fileService.downloadFile(fileId, user)

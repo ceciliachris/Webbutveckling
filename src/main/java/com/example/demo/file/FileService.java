@@ -1,10 +1,8 @@
-package com.example.demo.services;
+package com.example.demo.file;
 
-import com.example.demo.models.FileEntity;
-import com.example.demo.models.Folders;
-import com.example.demo.models.User;
-import com.example.demo.repositories.FileRepository;
-import com.example.demo.repositories.FolderRepository;
+import com.example.demo.folder.FolderEntity;
+import com.example.demo.user.UserEntity;
+import com.example.demo.folder.FolderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,8 +21,8 @@ public class FileService {
         this.folderRepository = folderRepository;
     }
 
-    public void uploadFile(Long folderId, MultipartFile file, User user) throws IOException {
-        Folders folder = folderRepository.findById(folderId)
+    public void uploadFile(Long folderId, MultipartFile file, UserEntity user) throws IOException {
+        FolderEntity folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new IllegalArgumentException("Folder not found with id" + folderId));
 
         System.out.println("Folder owner: " + folder.getUser().getName());
@@ -36,7 +34,6 @@ public class FileService {
 
         System.out.println("Detected MIME type: " + file.getContentType());
 
-        // Skapa FileEntity med fallback MIME-type
         String mimeType = file.getContentType();
         if (mimeType == null || !mimeType.contains("/")) {
             mimeType = "application/octet-stream";
@@ -54,7 +51,7 @@ public class FileService {
 
     }
 
-    public void deleteFile(Long fileId, User user) {
+    public void deleteFile(Long fileId, UserEntity user) {
         FileEntity fileEntity = fileRepository.findById(fileId)
                 .orElseThrow(() -> new IllegalArgumentException("File not found with id " + fileId));
         if (!fileEntity.getFolder().getUser().getId().equals(user.getId())) {
@@ -64,7 +61,7 @@ public class FileService {
         fileRepository.delete(fileEntity);
     }
 
-    public Optional<FileEntity> downloadFile(Long fileId, User user) {
+    public Optional<FileEntity> downloadFile(Long fileId, UserEntity user) {
         FileEntity fileEntity = fileRepository.findById(fileId)
                 .orElseThrow(() -> new IllegalArgumentException("File not found with id " + fileId));
         System.out.println("User ID: " + user.getId());
