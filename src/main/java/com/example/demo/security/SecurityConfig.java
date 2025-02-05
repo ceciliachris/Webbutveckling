@@ -36,7 +36,7 @@ public class SecurityConfig {
                             .requestMatchers("/register").permitAll()
                             .requestMatchers("/login").permitAll()
                             .requestMatchers("/test").authenticated()
-                            .requestMatchers("/api/folders/**").authenticated()
+                            .requestMatchers("/api/folder/**").authenticated()
                             .anyRequest().authenticated()
                 )
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)

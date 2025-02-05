@@ -1,13 +1,19 @@
 package com.example.demo.security;
 
+import com.example.demo.user.UserEntity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.util.Collections;
 
 /**
  * Filterklass för att hantera autentisering vid varje HTTP-anrop.
@@ -18,6 +24,16 @@ public class AuthFilter extends OncePerRequestFilter {
 
     private final AuthService authService;
 
+    /**
+     * Hanterar autentisering genom att verifiera JWT-token i förfrågan.
+     * om en giltig token hittas sätts användaren i SecurityContext-
+     *
+     * @param request Http-förfrågan.
+     * @param response Http-svar.
+     * @param filterChain Filterkedjan för att skicka vidare förfrågan.
+     * @throws ServletException Om ett servlet-relaterat fel uppstår.
+     * @throws IOException Om ett IO-fel uppstår.
+     */
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -42,11 +58,16 @@ public class AuthFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
         try {
-            authService.authenticateUser(token);
+            UserEntity user = authService.authenticateUser(token);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    user,
+                    null,
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
         } catch (Exception e) {
-            System.out.println("Error in filter: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Authentication failed in filter", e);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid or expired token");
             response.getWriter().flush();

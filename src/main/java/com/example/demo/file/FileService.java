@@ -11,6 +11,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -28,8 +31,8 @@ public class FileService {
      * Laddar upp en fil till en specifik mapp.
      *
      * @param folderId ID för mappen där filen ska laddas upp.
-     * @param file Filen som laddas upp.
-     * @param user Användaren som förösker ladda upp filen.
+     * @param file     Filen som laddas upp.
+     * @param user     Användaren som förösker ladda upp filen.
      * @throws IOException Om det uppstår problem vid läsning av filen.
      */
     public void uploadFile(Long folderId, MultipartFile file, UserEntity user) throws IOException {
@@ -61,7 +64,7 @@ public class FileService {
      * Tar bort en fil om användaren har behörighet.
      *
      * @param fileId ID för filen som ska tas bort.
-     * @param user Användaren som försöker ta bort filen.
+     * @param user   Användaren som försöker ta bort filen.
      */
     public void deleteFile(Long fileId, UserEntity user) {
         FileEntity fileEntity = fileRepository.findById(fileId)
@@ -80,17 +83,45 @@ public class FileService {
      * Hämtar en fil om användaren har behörighet att ladda ner den.
      *
      * @param fileId Id för filen som ska laddas ner.
-     * @param user Användaren som förösker ladda ner filen.
+     * @param user   Användaren som förösker ladda ner filen.
      * @return FileEntity om användaren har behörighet.
      */
     public FileEntity downloadFile(Long fileId, UserEntity user) {
         FileEntity fileEntity = fileRepository.findById(fileId)
                 .orElseThrow(() -> new ResourceNotFoundException("File not found with id " + fileId));
-        log.info("User {} requsting download for file ID: {}", user.getId(), fileId);
+        log.info("User {} requesting download for file ID: {}", user.getId(), fileId);
 
         if (!fileEntity.getFolder().getUser().getId().equals(user.getId())) {
             throw new ForbiddenException("You do not have permission to download this file");
         }
         return fileEntity;
+    }
+
+    /**
+     * Hämtar information om alla filer i en mapp om användaren har behörighet.
+     *
+     * @param folderId Id på mappen där man vill hämta filernas information.
+     * @param user Användaren som förösker hämta filernas information.
+     * @return En lista av FileInfoDTO som innehåller information om filerna i den angivna mappen.
+     * @throws ResourceNotFoundException Om mappen med det angivet ID inte hittas.
+     * @throws ForbiddenException Om användaren inte har behörighet att se innehållet i mappen.
+     */
+    public List<FileInfoDTO> getFilesInFolder(Long folderId, UserEntity user) {
+        FolderEntity folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
+
+        if (!folder.getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("You don't have permission to access this folder");
+        }
+
+        return fileRepository.findByFolder(folder).stream()
+                .map(file -> new FileInfoDTO(
+                        file.getId(),
+                        file.getFileName(),
+                        file.getFileType(),
+                        file.getData() != null ? file.getData().length : 0,
+                        file.getUploadDate() != null ? file.getUploadDate() : LocalDateTime.now()
+                ))
+                .collect(Collectors.toList());
     }
 }

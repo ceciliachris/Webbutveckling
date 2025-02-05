@@ -10,9 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -45,7 +44,7 @@ public class FileController {
     @DeleteMapping("/{fileId}")
     public ResponseEntity<String> deleteFile(@PathVariable Long fileId, @AuthenticationPrincipal UserEntity user) {
         try {
-            log.info("User {} attempting to delete file with ID {}", user.getPassword(), fileId);
+            log.info("User {} attempting to delete file with ID {}", user.getId(), fileId);
             fileService.deleteFile(fileId, user);
             return ResponseEntity.ok("File deleted successfully");
         } catch (ForbiddenException e) {
@@ -84,6 +83,23 @@ public class FileController {
         } catch (Exception e) {
             log.error("Unexpected error while downloading file ID: {}", fileId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/folder/{folderId}/files")
+    public ResponseEntity<List<FileInfoDTO>> getFilesInFolder(
+            @PathVariable Long folderId,
+            @AuthenticationPrincipal UserEntity user) {
+        try {
+            log.info("User {} requesting files in folder {}", user.getId(), folderId);
+            List<FileInfoDTO> files = fileService.getFilesInFolder(folderId, user);
+            return ResponseEntity.ok(files);
+        } catch (ForbiddenException e) {
+            log.warn("User {} does not have permission to access folder {}", user.getId(), folderId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        } catch (IllegalArgumentException e) {
+            log.error("Folder not found: {}", folderId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 }

@@ -28,15 +28,11 @@ public class AuthService {
      * @param token JWT-token från klienten.
      * @throws Exception Om token är ogiltig eller om användaren inte hittas.
      */
-    public void authenticateUser(String token) throws Exception {
+    public UserEntity authenticateUser(String token) throws Exception {
         JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
         DecodedJWT jwt = verifier.verify(token);
 
         UUID userId = UUID.fromString(jwt.getSubject());
-        UserEntity user = userRepository.findById(userId).orElseThrow();
-
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>())
-        );
+        return userRepository.findById(userId).orElseThrow();
     }
 }
