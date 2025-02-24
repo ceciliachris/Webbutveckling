@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 
@@ -60,23 +61,25 @@ public class UserService {
      * @param dto DTO-objekt med användarnamn och lösenord.
      * @return En JWT-token om inloggningen lyckas, annars null.
      */
-    public String login(UserController.UserDTO dto) {
+    public ResponseEntity<?> login(UserController.UserDTO dto) {
         Optional<UserEntity> optionalUser= userRepository.findByName(dto.username);
         if (optionalUser.isEmpty()) {
-            return null;
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
 
         UserEntity user = optionalUser.get();
         if(!passwordEncoder.matches(dto.password, user.getPassword())) {
-            return null;
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
 
         Algorithm algorithm = Algorithm.HMAC256("secretsecretsecret");
-        return JWT.create()
+        String token = JWT.create()
                 .withIssuer("auth0")
                 .withSubject(user.getId().toString())
                 .withClaim("loginDate", new Date())
                 .withExpiresAt(Instant.now().plus(1, ChronoUnit.DAYS))
                 .sign(algorithm);
+
+        return ResponseEntity.ok(Collections.singletonMap("token", token));
     }
 }

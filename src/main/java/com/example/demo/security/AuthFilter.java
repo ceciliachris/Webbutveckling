@@ -42,8 +42,9 @@ public class AuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         System.out.println("Request URL: " + request.getRequestURI());
 
-        if (request.getRequestURI().equals("/register") || request.getRequestURI().equals("/login")) {
-            filterChain.doFilter(request,response);
+        if (request.getRequestURI().matches("^/register|/login|/oauth2/.*$") ||
+                request.getRequestURI().startsWith("/oauth2/authorization")) {
+            filterChain.doFilter(request, response);
             return;
         }
 

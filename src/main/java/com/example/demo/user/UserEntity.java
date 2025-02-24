@@ -27,6 +27,12 @@ public class UserEntity {
     @Version
     private int version;
 
+    @Column
+    private String provider;
+
+    @Column
+    private String providerId;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<FolderEntity> folders = new ArrayList<>();

@@ -32,7 +32,11 @@ public class AuthService {
         JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
         DecodedJWT jwt = verifier.verify(token);
 
-        UUID userId = UUID.fromString(jwt.getSubject());
-        return userRepository.findById(userId).orElseThrow();
+        try {
+            UUID userId = UUID.fromString(jwt.getSubject());
+            return userRepository.findById(userId).orElseThrow();
+        } catch (IllegalArgumentException e) {
+            throw new Exception("Invalid token format");
+        }
     }
 }

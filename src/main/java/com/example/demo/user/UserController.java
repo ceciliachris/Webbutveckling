@@ -17,6 +17,12 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/test-auth")
+    public ResponseEntity<String> testAuth(@AuthenticationPrincipal UserEntity user) {
+        return ResponseEntity.ok("Autentiserad som: " + user.getName() +
+                ", Provider: " + user.getProvider());
+    }
+
     @GetMapping("/current-user")
     public ResponseEntity<String> getCurrentUser(@AuthenticationPrincipal UserEntity user) {
         return userService.getCurrentUser(user);
@@ -28,7 +34,7 @@ public class UserController {
     }
 
         @PostMapping("/login")
-        public String login (@RequestBody UserDTO dto){
+        public ResponseEntity<?> login (@RequestBody UserDTO dto){
             return userService.login(dto);
         }
 

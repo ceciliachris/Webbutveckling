@@ -1,7 +1,12 @@
 package com.example.demo.security;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.example.demo.user.UserEntity;
 import com.example.demo.user.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,42 +17,49 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
-
     private final AuthFilter authFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final UserRepository userRepository;
 
-    @Autowired
-    public SecurityConfig(AuthFilter authFilter) {
-        this.authFilter = authFilter;
-    }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, UserRepository userRepository) throws Exception {
-        http.cors(Customizer.withDefaults())
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/register").permitAll()
-                            .requestMatchers("/login").permitAll()
-                            .requestMatchers("/test").authenticated()
-                            .requestMatchers("/api/folder/**").authenticated()
-                            .anyRequest().authenticated()
+                        .requestMatchers("/register", "/login", "/oauth2/**","/error").permitAll()
+                        .requestMatchers("/api/folder/**").authenticated()
+                        .anyRequest().authenticated()
                 )
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            System.out.println("Authentication failed: " + authException.getMessage());
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.getWriter().write("Authentication failed: " + authException.getMessage());
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler((request, response, authentication) -> {
+                            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+                            String token = generateJwtToken(oauth2User);
+
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"token\": \"" + token + "\"}");
                             response.getWriter().flush();
+                            //response.sendRedirect("http://localhost:3000/oauth2/callback?token=" + token);
                         })
-                );
+                )
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -55,5 +67,20 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    private String generateJwtToken(OAuth2User oauth2User) {
+        Algorithm algorithm = Algorithm.HMAC256("secretsecretsecret");
+
+        String githubId = oauth2User.getAttribute("id").toString();
+        UserEntity user = userRepository.findByProviderAndProviderId("github", githubId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return JWT.create()
+                .withIssuer("auth0")
+                .withSubject(user.getId().toString())
+                .withClaim("login", oauth2User.getAttribute("login").toString())
+                .withExpiresAt(Instant.now().plus(1, ChronoUnit.DAYS))
+                .sign(algorithm);
     }
 }
