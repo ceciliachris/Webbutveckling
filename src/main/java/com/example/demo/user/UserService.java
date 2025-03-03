@@ -10,9 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
 
 /**
@@ -30,11 +28,28 @@ public class UserService {
      * @return ResponseEntity med användarnamnet om användaren är inloggad,
      * annars felkod 401 Unauthorized.
      */
-    public ResponseEntity<String> getCurrentUser(UserEntity user) {
+    public ResponseEntity<String> getCurrentUserString(UserEntity user) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok("Authenticated user: " + user.getName());
+    }
+
+    /**
+     * Hämtar en användare baserat på ID.
+     * @param userId användarens ID.
+     * @return Optional med användaren om den hittas.
+     */
+    public Optional<UserEntity> getUserById(UUID userId) {
+        return userRepository.findById(userId);
+    }
+
+    /**
+     * Hämtar alla användare för administrativa ändamål.
+     * @return
+     */
+    public List<UserEntity> getAllUsers() {
+        return userRepository.findAll();
     }
 
     /**
@@ -50,7 +65,7 @@ public class UserService {
         UserEntity user = new UserEntity(dto.username, passwordEncoder.encode(dto.password));
         try {
             UserEntity savedUser = userRepository.save(user);
-            return ResponseEntity.ok(new UserController.UserDTO(savedUser.getName(), "[PROTECTED]"));
+            return ResponseEntity.ok(savedUser);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Registration failed: " + e.getMessage());
         }
@@ -62,7 +77,7 @@ public class UserService {
      * @return En JWT-token om inloggningen lyckas, annars null.
      */
     public ResponseEntity<?> login(UserController.UserDTO dto) {
-        Optional<UserEntity> optionalUser= userRepository.findByName(dto.username);
+        Optional<UserEntity> optionalUser = userRepository.findByName(dto.username);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
@@ -80,6 +95,10 @@ public class UserService {
                 .withExpiresAt(Instant.now().plus(1, ChronoUnit.DAYS))
                 .sign(algorithm);
 
-        return ResponseEntity.ok(Collections.singletonMap("token", token));
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("userId", user.getId());
+
+        return ResponseEntity.ok(response);
     }
 }
