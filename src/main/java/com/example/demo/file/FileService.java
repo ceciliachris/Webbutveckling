@@ -6,6 +6,7 @@ import com.example.demo.folder.FolderEntity;
 import com.example.demo.user.UserEntity;
 import com.example.demo.folder.FolderRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -115,13 +116,34 @@ public class FileService {
         }
 
         return fileRepository.findByFolder(folder).stream()
-                .map(file -> new FileInfoDTO(
-                        file.getId(),
-                        file.getFileName(),
-                        file.getFileType(),
-                        file.getData() != null ? file.getData().length : 0,
-                        file.getUploadDate() != null ? file.getUploadDate() : LocalDateTime.now()
-                ))
+                .map(file -> {
+                    FileInfoDTO dto = new FileInfoDTO(
+                            file.getId(),
+                            file.getFileName(),
+                            file.getFileType(),
+                            file.getData() != null ? file.getData().length : 0,
+                            file.getUploadDate()
+                    );
+
+                    dto.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(FileController.class)
+                            .downloadFile(file.getId(), user)).withRel("download"));
+
+                    dto.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(FileController.class)
+                            .deleteFile(file.getId(), user)).withRel("delete"));
+
+                    return dto;
+                })
                 .collect(Collectors.toList());
+    }
+
+    public Long getFileFolder(Long fileId) {
+        try {
+            FileEntity fileEntity = fileRepository.findById(fileId)
+                    .orElseThrow(()-> new ResourceNotFoundException("File not found with id " + fileId));
+            return fileEntity.getFolder().getId();
+        } catch (Exception e) {
+            log.error("Error getting folder for file ID: {}" + fileId, e);
+            return null;
+        }
     }
 }
