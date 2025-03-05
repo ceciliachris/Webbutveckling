@@ -39,23 +39,15 @@ public class FileController {
 
             fileService.uploadFile(folderId, file, user);
 
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "File uploaded successfully");
-
-            EntityModel<Map<String, String>> responseModel = EntityModel.of(response);
-
-            responseModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(FileController.class)
-                    .getFilesInFolder(folderId, user)).withRel("viewFilesInFolder"));
-
-            return ResponseEntity.ok(responseModel);
+            return ResponseEntity.ok(Map.of("message", "File uploaded successfully"));
         } catch (IllegalArgumentException e) {
             log.warn("Upload failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(EntityModel.of("Invalid request: "+ e.getMessage()));
+                    .body(Map.of("error","Invalid request: "+ e.getMessage()));
         } catch (IOException e) {
             log.error("File upload error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(EntityModel.of("Failed to upload file"));
+                    .body(Map.of("error","Failed to upload file"));
         }
     }
 
@@ -65,32 +57,17 @@ public class FileController {
             log.info("User {} attempting to delete file with ID {}", user.getId(), fileId);
 
             Long folderId = fileService.getFileFolder(fileId);
-
             fileService.deleteFile(fileId, user);
 
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "File deleted successfully");
-
-            EntityModel<Map<String, String>> responseModel = EntityModel.of(response);
-
-            if (folderId != null) {
-                responseModel.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(FileController.class)
-                        .getFilesInFolder(folderId, user)).withRel("viewFilesInFolder"));
-            }
-
-            return ResponseEntity.ok(responseModel);
+            return ResponseEntity.ok(Map.of("message", "File deleted successfully"));
         } catch (ForbiddenException e) {
             log.warn("User {} is not authorized to delete file {}", user.getId(), fileId);
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "You do not have permission to delete this file");
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(EntityModel.of(errorResponse));
+                    .body(Map.of("error", "You do not have permission to delete this file"));
         } catch (IllegalArgumentException e) {
             log.error("File deletion error: {}", e.getMessage());
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "File not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(EntityModel.of(errorResponse));
+                    .body(Map.of("error", "File not found"));
         }
     }
 
@@ -125,23 +102,14 @@ public class FileController {
     }
 
     @GetMapping("/folder/{folderId}/files")
-    public ResponseEntity<CollectionModel<FileInfoDTO>> getFilesInFolder(
+    public ResponseEntity<List<FileInfoDTO>> getFilesInFolder(
             @PathVariable Long folderId,
             @AuthenticationPrincipal UserEntity user) {
         try {
             log.info("User {} requesting files in folder {}", user.getId(), folderId);
             List<FileInfoDTO> files = fileService.getFilesInFolder(folderId, user);
 
-            CollectionModel<FileInfoDTO> fileCollection = CollectionModel.of(files);
-
-            fileCollection.add(WebMvcLinkBuilder.linkTo(FileController.class).withRel("files"));
-
-            fileCollection.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(FileController.class)
-                            .uploadFile(folderId, null, user)).withRel("upload")
-                    .withTitle("Upload a new file to this folder"));
-
-
-            return ResponseEntity.ok(fileCollection);
+            return ResponseEntity.ok(files);
         } catch (ForbiddenException e) {
             log.warn("User {} does not have permission to access folder {}", user.getId(), folderId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);

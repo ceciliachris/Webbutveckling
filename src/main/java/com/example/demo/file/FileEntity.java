@@ -41,13 +41,12 @@ public class FileEntity {
         if (fileName == null) return "application/octet-stream";
 
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-        switch (extension) {
-            case "pdf": return "application/pdf";
-            case "jpg": return "application/jpeg";
-            case "png": return "application/png";
-            case "jpeg": return "application/jpeg";
-            case "txt": return "application/txt";
-            default: return "application/octet-stream";
-        }
+        return switch (extension) {
+            case "pdf" -> "application/pdf";
+            case "jpg", "jpeg" -> "application/jpeg";
+            case "png" -> "application/png";
+            case "txt" -> "application/txt";
+            default -> "application/octet-stream";
+        };
     }
 }
