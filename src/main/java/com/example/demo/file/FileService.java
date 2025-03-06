@@ -36,7 +36,7 @@ public class FileService {
      * @param user     Användaren som förösker ladda upp filen.
      * @throws IOException Om det uppstår problem vid läsning av filen.
      */
-    public void uploadFile(Long folderId, MultipartFile file, UserEntity user) throws IOException {
+    public FileEntity uploadFile(Long folderId, MultipartFile file, UserEntity user) throws IOException {
         FolderEntity folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Folder not found with id" + folderId));
         log.info("Uploading file '{}' to folder ID: {} by user: {}", file.getOriginalFilename(), folderId, user.getName());
@@ -59,6 +59,8 @@ public class FileService {
 
         fileRepository.save(fileEntity);
         log.info("File '{}' upploaded successfully to folder ID: {}", fileEntity.getFileName(), folderId);
+
+        return fileEntity;
     }
 
     /**
@@ -107,7 +109,7 @@ public class FileService {
      * @throws ResourceNotFoundException Om mappen med det angivet ID inte hittas.
      * @throws ForbiddenException Om användaren inte har behörighet att se innehållet i mappen.
      */
-    public List<FileInfoDTO> getFilesInFolder(Long folderId, UserEntity user) {
+    public List<FileEntity> getFilesInFolder(Long folderId, UserEntity user) {
         FolderEntity folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
 
@@ -115,25 +117,7 @@ public class FileService {
             throw new ForbiddenException("You don't have permission to access this folder");
         }
 
-        return fileRepository.findByFolder(folder).stream()
-                .map(file -> {
-                    FileInfoDTO dto = new FileInfoDTO(
-                            file.getId(),
-                            file.getFileName(),
-                            file.getFileType(),
-                            file.getData() != null ? file.getData().length : 0,
-                            file.getUploadDate()
-                    );
-
-                    dto.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(FileController.class)
-                            .downloadFile(file.getId(), user)).withRel("download"));
-
-                    dto.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(FileController.class)
-                            .deleteFile(file.getId(), user)).withRel("delete"));
-
-                    return dto;
-                })
-                .collect(Collectors.toList());
+        return fileRepository.findByFolder(folder);
     }
 
     public Long getFileFolder(Long fileId) {

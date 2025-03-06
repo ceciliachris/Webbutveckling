@@ -60,4 +60,8 @@ public class FolderService {
     public List<FolderEntity> getUserFolder(UserEntity user) {
         return folderRepository.findAllByUser(user);
     }
+
+    public List<FolderEntity> getAllFoldersByUser(UserEntity user) {
+        return folderRepository.findAllByUser(user);
+    }
 }

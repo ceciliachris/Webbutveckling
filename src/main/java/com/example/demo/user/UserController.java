@@ -1,5 +1,6 @@
 package com.example.demo.user;
 
+import com.example.demo.folder.FolderController;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,9 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequiredArgsConstructor
@@ -66,9 +68,26 @@ public class UserController {
         return response;
     }
 
-        @PostMapping("/login")
-        public ResponseEntity<?> login (@RequestBody UserDTO dto){
-            return userService.login(dto);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserDTO dto) {
+        ResponseEntity<?> response = userService.login(dto);
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() instanceof Map) {
+
+            Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+
+            if (responseBody.containsKey("user") && responseBody.get("user") instanceof UserEntity) {
+                UserEntity user = (UserEntity) responseBody.get("user");
+                UserModel userModel = userModelAssembler.toModel(user);
+
+                Map<String, Object> enhancedResponse = new HashMap<>(responseBody);
+                enhancedResponse.put("user", userModel);
+
+                return ResponseEntity.ok(enhancedResponse);
+            }
+        }
+
+        return response;
         }
 
         @Data

@@ -98,6 +98,7 @@ public class UserService {
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
         response.put("userId", user.getId());
+        response.put("user", user);
 
         return ResponseEntity.ok(response);
     }

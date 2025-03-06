@@ -1,17 +1,20 @@
 package com.example.demo.folder;
 
+import com.example.demo.user.UserController;
 import com.example.demo.user.UserEntity;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Optional;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/folders")
@@ -48,6 +51,23 @@ public class FolderController {
     public ResponseEntity<CollectionModel<FolderModel>> getUserFolders(@AuthenticationPrincipal UserEntity user) {
         List<FolderEntity> folders = folderService.getUserFolder(user);
         return ResponseEntity.ok(folderAssembler.toCollectionModel(folders));
+    }
+
+    @GetMapping("/allFolders")
+    public ResponseEntity<CollectionModel<FolderModel>> getAllFolders(@AuthenticationPrincipal UserEntity user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<FolderEntity> folders = folderService.getAllFoldersByUser(user);
+        CollectionModel<FolderModel> folderCollection = folderAssembler.toCollectionModel(folders);
+
+        folderCollection.add(
+                linkTo(methodOn(FolderController.class).getAllFolders(user)).withSelfRel(),
+                linkTo(methodOn(UserController.class).getCurrentUser(user)).withRel("user")
+        );
+
+        return ResponseEntity.ok(folderCollection);
     }
 
     @Setter
