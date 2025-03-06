@@ -66,8 +66,8 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody UserDTO dto) {
         ResponseEntity<?> response = userService.login(dto);
 
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() instanceof Map) {
-
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() instanceof Map<?, ?>) {
+            @SuppressWarnings("unchecked")
             Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
 
             if (responseBody.containsKey("user") && responseBody.get("user") instanceof UserEntity) {
