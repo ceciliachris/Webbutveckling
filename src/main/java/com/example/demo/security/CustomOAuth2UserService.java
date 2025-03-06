@@ -22,6 +22,15 @@ import java.util.UUID;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final UserRepository userRepository;
 
+    /**
+     * Hämtar användarens detaljer från OAuth2-provider (GitHub) och returnerar en OAuth2User.
+     * Metod som kallas när användaren autentiseras via OAuth2.
+     *
+     * @param userRequest Innehåller begäran om OAuth2-inloggning och information om användaren.
+     * @return OAuth2User objekt som innehåller användarens attribut.
+     * @throws OAuth2AuthenticationException Om autentisering misslyckas.
+     */
+
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 
@@ -31,6 +40,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         return processOAuth2User(oauth2User);
     }
+
+    /**
+     * Processerar om användarens detaljer som hämtas från OAuth2-provider.
+     * Om användaren inte redan finns i systemet skapas en ny användare.
+     *
+     * @param oauth2User Användarens attribut från OAuth2-provider.
+     * @return En OAuth2User med användarens detaljer.
+     */
 
     private OAuth2User processOAuth2User(OAuth2User oauth2User) {
         Map<String, Object> attributes = oauth2User.getAttributes();

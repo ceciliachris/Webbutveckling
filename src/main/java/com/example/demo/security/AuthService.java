@@ -7,11 +7,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.demo.user.UserEntity;
 import com.example.demo.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.UUID;
 
 /**
@@ -26,6 +22,7 @@ public class AuthService {
     /**
      * Verifierar JWT-token och autentiserar användaren.
      * @param token JWT-token från klienten.
+     * @return Den autentiserade användaren.
      * @throws Exception Om token är ogiltig eller om användaren inte hittas.
      */
     public UserEntity authenticateUser(String token) throws Exception {

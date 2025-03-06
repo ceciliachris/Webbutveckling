@@ -57,7 +57,7 @@ public class AuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
+        String token = authHeader.substring("Bearer ".length());
         try {
             UserEntity user = authService.authenticateUser(token);
             Authentication authentication = new UsernamePasswordAuthenticationToken(

@@ -6,15 +6,10 @@ import com.example.demo.folder.FolderEntity;
 import com.example.demo.user.UserEntity;
 import com.example.demo.folder.FolderRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,6 +30,7 @@ public class FileService {
      * @param file     Filen som laddas upp.
      * @param user     Användaren som förösker ladda upp filen.
      * @throws IOException Om det uppstår problem vid läsning av filen.
+     * @throws ForbiddenException Om användaren inte har behörighet att ladda upp filen till mappen.
      */
     public FileEntity uploadFile(Long folderId, MultipartFile file, UserEntity user) throws IOException {
         FolderEntity folder = folderRepository.findById(folderId)
@@ -68,6 +64,8 @@ public class FileService {
      *
      * @param fileId ID för filen som ska tas bort.
      * @param user   Användaren som försöker ta bort filen.
+     * @throws ResourceNotFoundException Om filen inte hittas.
+     * @throws ForbiddenException Om användaren inte har behörighet att ta bort filen.
      */
     public void deleteFile(Long fileId, UserEntity user) {
         FileEntity fileEntity = fileRepository.findById(fileId)
@@ -87,7 +85,9 @@ public class FileService {
      *
      * @param fileId Id för filen som ska laddas ner.
      * @param user   Användaren som förösker ladda ner filen.
-     * @return FileEntity om användaren har behörighet.
+     * @return FileEntity om användaren har behörighet att ladda ner filen.
+     * @throws ResourceNotFoundException Om filen inte hittas.
+     * @throws ForbiddenException Om användaren inte har behörighet att ladda ner filen.
      */
     public FileEntity downloadFile(Long fileId, UserEntity user) {
         FileEntity fileEntity = fileRepository.findById(fileId)
@@ -119,6 +119,14 @@ public class FileService {
 
         return fileRepository.findByFolder(folder);
     }
+
+    /**
+     * Hämtar mappen för en given fil baserat på filens ID.
+     * Om filen inte kan hittas kastas en exception.
+     *
+     * @param fileId ID för filen vars mapp ska hämtas.
+     * @return ID för mappen som filen tillhör. Om ett fel inträffar returneras null.
+     */
 
     public Long getFileFolder(Long fileId) {
         try {

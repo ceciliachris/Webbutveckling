@@ -1,7 +1,6 @@
 package com.example.demo.user;
 
 import com.example.demo.folder.FolderController;
-import org.apache.catalina.User;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;

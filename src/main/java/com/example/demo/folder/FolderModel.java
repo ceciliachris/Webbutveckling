@@ -1,6 +1,5 @@
 package com.example.demo.folder;
 
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.core.Relation;
